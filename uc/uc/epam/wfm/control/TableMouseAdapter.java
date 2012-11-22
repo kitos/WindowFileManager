@@ -1,8 +1,7 @@
-package uc.epam.wfm.model;
+package uc.epam.wfm.control;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import uc.epam.wfm.control.Controller;
 
 public class TableMouseAdapter extends MouseAdapter {
 

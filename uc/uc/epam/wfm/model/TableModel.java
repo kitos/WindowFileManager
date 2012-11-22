@@ -10,7 +10,6 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.Observable;
 import java.util.Observer;
-
 import javax.swing.table.AbstractTableModel;
 
 /**
@@ -23,7 +22,7 @@ public class TableModel extends AbstractTableModel implements Observer {
 
     private File curPath;
     private String columnNames[] = { "", "Name", "Type", "Size", "Date" };
-    private LinkedList<Item> data;
+    private LinkedList<Item> data = new LinkedList<Item>();
 
     public TableModel() {
 	setDirectory(".");
@@ -56,15 +55,31 @@ public class TableModel extends AbstractTableModel implements Observer {
     }
 
     public void updateTable() {
-	data = new LinkedList<Item>();
-	for (File file : curPath.listFiles()) {
-	    Item item = new Item(file);
-	    data.add(item);
-	    SizeFinder sf = new SizeFinder(item, this);
-	    Thread thread = new Thread(sf, "new_thread");
-	    thread.start();
+	data.clear();
+	if (curPath.list() != null) {
+	    for (File file : curPath.listFiles()) {
+		if (file.isHidden())
+		    continue;
+		Item item = new Item(file);
+		data.add(item);
+		IconFinder icf = new IconFinder(item, this);
+		TypeFinder tf = new TypeFinder(item, this);
+		SizeFinder sf = new SizeFinder(item, this);
+
+		Thread thread = new Thread(icf, "icon_thread" + data.size());
+		thread.setPriority(5);
+		thread.start();
+		thread = new Thread(tf, "type_thread" + data.size());
+		thread.setPriority(3);
+		thread.start();
+		thread = new Thread(sf, "size_thread" + data.size());
+		thread.setPriority(3);
+		thread.start();
+	    }
+	    if (data.size() != 0) {
+		fireTableDataChanged();
+	    }
 	}
-	fireTableDataChanged();
     }
 
     public String getColumnName(int col) {
@@ -107,7 +122,7 @@ public class TableModel extends AbstractTableModel implements Observer {
 	data.get(row).setName(obj.toString());
     }
 
-    private String sizeConverter(long size) {
+    public static String sizeConverter(long size) {
 	String prefixes[] = { "b", "Kb", "Mb", "Gb", "Tb" };
 	float s = size;
 	int i = 0;
