@@ -5,12 +5,11 @@ package uc.epam.wfm.model;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.Observable;
 import java.util.Observer;
 import javax.swing.table.AbstractTableModel;
+import uc.epam.wfm.view.View;
 
 /**
  * @author Никита
@@ -63,18 +62,20 @@ public class TableModel extends AbstractTableModel implements Observer {
 		Item item = new Item(file);
 		data.add(item);
 		IconFinder icf = new IconFinder(item, this);
-		TypeFinder tf = new TypeFinder(item, this);
-		SizeFinder sf = new SizeFinder(item, this);
-
 		Thread thread = new Thread(icf, "icon_thread" + data.size());
 		thread.setPriority(5);
 		thread.start();
+
+		TypeFinder tf = new TypeFinder(item, this);
 		thread = new Thread(tf, "type_thread" + data.size());
 		thread.setPriority(3);
 		thread.start();
-		thread = new Thread(sf, "size_thread" + data.size());
-		thread.setPriority(3);
-		thread.start();
+		if (file.isFile()) {
+		    SizeFinder sf = new SizeFinder(item, this);
+		    thread = new Thread(sf, "size_thread" + data.size());
+		    thread.setPriority(3);
+		    thread.start();
+		}
 	    }
 	    if (data.size() != 0) {
 		fireTableDataChanged();
@@ -106,9 +107,9 @@ public class TableModel extends AbstractTableModel implements Observer {
 	case 2:
 	    return data.get(row).getType();
 	case 3:
-	    return sizeConverter(data.get(row).getSize());
+	    return View.sizeConverter(data.get(row).getSize());
 	case 4:
-	    return dateConverter(data.get(row).getDate());
+	    return View.dateConverter(data.get(row).getDate());
 	default:
 	    return "";
 	}
@@ -120,22 +121,6 @@ public class TableModel extends AbstractTableModel implements Observer {
 
     public void setValueAt(Object obj, int row, int col) {
 	data.get(row).setName(obj.toString());
-    }
-
-    public static String sizeConverter(long size) {
-	String prefixes[] = { "b", "Kb", "Mb", "Gb", "Tb" };
-	float s = size;
-	int i = 0;
-	while (s >= 1024 && i < 5) {
-	    s /= 1024;
-	    i++;
-	}
-	return String.format("%.1f %s", s, prefixes[i]);
-    }
-
-    private String dateConverter(long date) {
-	SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
-	return dateFormat.format(new Date(date));
     }
 
     @Override

@@ -35,7 +35,8 @@ import uc.epam.wfm.model.TableModel;
 public class Window extends JFrame implements ActionListener {
     private static final long serialVersionUID = 1L;
 
-    private Controller control;
+    private Controller lControl;
+    private Controller rControl;
     private JLabel lPathLabel;
     private JLabel rPathLabel;
     private JComboBox<String> lComboBox;
@@ -56,35 +57,11 @@ public class Window extends JFrame implements ActionListener {
     public Window() {
 	initComponents();
 	setUpComposition();
+	lControl.initComponents(this, lComboBox, lTable, lTableModel,
+		rTableModel, paths);
+	rControl.initComponents(this, rComboBox, rTable, rTableModel,
+		lTableModel, paths);
 	setExtendedState(JFrame.MAXIMIZED_BOTH);
-    }
-
-    public JComboBox<String> getLeftComboBox() {
-	return lComboBox;
-    }
-
-    public JComboBox<String> getRightComboBox() {
-	return rComboBox;
-    }
-
-    public JTable getLeftTable() {
-	return lTable;
-    }
-
-    public JTable getRightTable() {
-	return rTable;
-    }
-
-    public TableModel getLeftTableModel() {
-	return lTableModel;
-    }
-
-    public TableModel getRightTableModel() {
-	return rTableModel;
-    }
-
-    public Vector<String> getPaths() {
-	return paths;
     }
 
     public boolean mustCopy() {
@@ -92,7 +69,8 @@ public class Window extends JFrame implements ActionListener {
     }
 
     private void initComponents() {
-	control = new Controller(this);
+	lControl = new Controller();
+	rControl = new Controller();
 	lTableModel = new TableModel();
 	rTableModel = new TableModel();
 
@@ -117,20 +95,20 @@ public class Window extends JFrame implements ActionListener {
 	rComboBox = new JComboBox<String>(paths);
 	lComboBox.setEditable(true);
 	rComboBox.setEditable(true);
-	lComboBox.setActionCommand("ult");
-	rComboBox.setActionCommand("urt");
-	lComboBox.addActionListener(control);
-	rComboBox.addActionListener(control);
+	lComboBox.setActionCommand("upt");
+	rComboBox.setActionCommand("upt");
+	lComboBox.addActionListener(lControl);
+	rComboBox.addActionListener(rControl);
 	lSetPathButton = new JButton();
 	rSetPathButton = new JButton();
 	ImageIcon icon = new ImageIcon(Toolkit.getDefaultToolkit().getImage(
 		getClass().getResource("/src/set_dir.png")));
 	lSetPathButton.setIcon(icon);
 	rSetPathButton.setIcon(icon);
-	lSetPathButton.setActionCommand("ult");
-	rSetPathButton.setActionCommand("urt");
-	lSetPathButton.addActionListener(control);
-	rSetPathButton.addActionListener(control);
+	lSetPathButton.setActionCommand("upt");
+	rSetPathButton.setActionCommand("upt");
+	lSetPathButton.addActionListener(lControl);
+	rSetPathButton.addActionListener(rControl);
 
 	lTable = new JTable(lTableModel);
 	rTable = new JTable(rTableModel);
@@ -142,8 +120,8 @@ public class Window extends JFrame implements ActionListener {
 	rTable.setRowHeight(18);
 	lTable.setShowGrid(false);
 	rTable.setShowGrid(false);
-	lTable.addMouseListener(new TableMouseAdapter(control));
-	rTable.addMouseListener(new TableMouseAdapter(control));
+	lTable.addMouseListener(new TableMouseAdapter(lControl));
+	rTable.addMouseListener(new TableMouseAdapter(rControl));
 
 	lTable.getColumnModel().getColumn(4).setMaxWidth(100);
 	rTable.getColumnModel().getColumn(4).setMaxWidth(100);
@@ -161,10 +139,10 @@ public class Window extends JFrame implements ActionListener {
 	ImageIcon icon;
 	JButton lBackButton = new JButton();
 	JButton rBackButton = new JButton();
-	lBackButton.setActionCommand("lb");
-	rBackButton.setActionCommand("rb");
-	lBackButton.addActionListener(control);
-	rBackButton.addActionListener(control);
+	lBackButton.setActionCommand("back");
+	rBackButton.setActionCommand("back");
+	lBackButton.addActionListener(lControl);
+	rBackButton.addActionListener(rControl);
 	icon = new ImageIcon(Toolkit.getDefaultToolkit().getImage(
 		getClass().getResource("/src/go_back.png")));
 	lBackButton.setIcon(icon);
@@ -172,10 +150,10 @@ public class Window extends JFrame implements ActionListener {
 
 	JButton lNewFileButton = new JButton();
 	JButton rNewFileButton = new JButton();
-	lNewFileButton.setActionCommand("lnfile");
-	rNewFileButton.setActionCommand("rnfile");
-	lNewFileButton.addActionListener(control);
-	rNewFileButton.addActionListener(control);
+	lNewFileButton.setActionCommand("newfile");
+	rNewFileButton.setActionCommand("newfile");
+	lNewFileButton.addActionListener(lControl);
+	rNewFileButton.addActionListener(rControl);
 	icon = new ImageIcon(Toolkit.getDefaultToolkit().getImage(
 		getClass().getResource("/src/new_file.png")));
 	lNewFileButton.setIcon(icon);
@@ -183,10 +161,10 @@ public class Window extends JFrame implements ActionListener {
 
 	JButton lNewFolderButton = new JButton();
 	JButton rNewFolderButton = new JButton();
-	lNewFolderButton.setActionCommand("lnfolder");
-	rNewFolderButton.setActionCommand("rnfolder");
-	lNewFolderButton.addActionListener(control);
-	rNewFolderButton.addActionListener(control);
+	lNewFolderButton.setActionCommand("newfolder");
+	rNewFolderButton.setActionCommand("newfolder");
+	lNewFolderButton.addActionListener(lControl);
+	rNewFolderButton.addActionListener(rControl);
 	icon = new ImageIcon(Toolkit.getDefaultToolkit().getImage(
 		getClass().getResource("/src/new_folder.png")));
 	lNewFolderButton.setIcon(icon);
@@ -194,10 +172,10 @@ public class Window extends JFrame implements ActionListener {
 
 	JButton lDeleteButton = new JButton();
 	JButton rDeleteButton = new JButton();
-	lDeleteButton.setActionCommand("ldel");
-	rDeleteButton.setActionCommand("rdel");
-	lDeleteButton.addActionListener(control);
-	rDeleteButton.addActionListener(control);
+	lDeleteButton.setActionCommand("del");
+	rDeleteButton.setActionCommand("del");
+	lDeleteButton.addActionListener(lControl);
+	rDeleteButton.addActionListener(rControl);
 	icon = new ImageIcon(Toolkit.getDefaultToolkit().getImage(
 		getClass().getResource("/src/delete.png")));
 	lDeleteButton.setIcon(icon);
@@ -205,10 +183,10 @@ public class Window extends JFrame implements ActionListener {
 
 	JButton lCutButton = new JButton();
 	JButton rCutButton = new JButton();
-	lCutButton.setActionCommand("lcut");
-	rCutButton.setActionCommand("rcut");
-	lCutButton.addActionListener(control);
-	rCutButton.addActionListener(control);
+	lCutButton.setActionCommand("cut");
+	rCutButton.setActionCommand("cut");
+	lCutButton.addActionListener(lControl);
+	rCutButton.addActionListener(rControl);
 	icon = new ImageIcon(Toolkit.getDefaultToolkit().getImage(
 		getClass().getResource("/src/cut.png")));
 	lCutButton.setIcon(icon);
@@ -216,10 +194,10 @@ public class Window extends JFrame implements ActionListener {
 
 	JButton lCopyButton = new JButton();
 	JButton rCopyButton = new JButton();
-	lCopyButton.setActionCommand("lcopy");
-	rCopyButton.setActionCommand("rcopy");
-	lCopyButton.addActionListener(control);
-	rCopyButton.addActionListener(control);
+	lCopyButton.setActionCommand("copy");
+	rCopyButton.setActionCommand("copy");
+	lCopyButton.addActionListener(lControl);
+	rCopyButton.addActionListener(rControl);
 	icon = new ImageIcon(Toolkit.getDefaultToolkit().getImage(
 		getClass().getResource("/src/copy.png")));
 	lCopyButton.setIcon(icon);
@@ -227,10 +205,10 @@ public class Window extends JFrame implements ActionListener {
 
 	JButton lPasteButton = new JButton();
 	JButton rPasteButton = new JButton();
-	lPasteButton.setActionCommand("lpaste");
-	rPasteButton.setActionCommand("rpaste");
-	lPasteButton.addActionListener(control);
-	rPasteButton.addActionListener(control);
+	lPasteButton.setActionCommand("paste");
+	rPasteButton.setActionCommand("paste");
+	lPasteButton.addActionListener(lControl);
+	rPasteButton.addActionListener(rControl);
 	icon = new ImageIcon(Toolkit.getDefaultToolkit().getImage(
 		getClass().getResource("/src/paste.png")));
 	lPasteButton.setIcon(icon);
@@ -238,10 +216,10 @@ public class Window extends JFrame implements ActionListener {
 
 	JButton lRenameButton = new JButton();
 	JButton rRenameButton = new JButton();
-	lRenameButton.setActionCommand("lren");
-	rRenameButton.setActionCommand("rren");
-	lRenameButton.addActionListener(control);
-	rRenameButton.addActionListener(control);
+	lRenameButton.setActionCommand("rename");
+	rRenameButton.setActionCommand("rename");
+	lRenameButton.addActionListener(lControl);
+	rRenameButton.addActionListener(rControl);
 	icon = new ImageIcon(Toolkit.getDefaultToolkit().getImage(
 		getClass().getResource("/src/rename.png")));
 	lRenameButton.setIcon(icon);
@@ -249,10 +227,10 @@ public class Window extends JFrame implements ActionListener {
 
 	JButton lPropertiesButton = new JButton();
 	JButton rPropertiesButton = new JButton();
-	lPropertiesButton.setActionCommand("lprop");
-	rPropertiesButton.setActionCommand("rprop");
-	lPropertiesButton.addActionListener(control);
-	rPropertiesButton.addActionListener(control);
+	lPropertiesButton.setActionCommand("prop");
+	rPropertiesButton.setActionCommand("prop");
+	lPropertiesButton.addActionListener(lControl);
+	rPropertiesButton.addActionListener(rControl);
 	icon = new ImageIcon(Toolkit.getDefaultToolkit().getImage(
 		getClass().getResource("/src/properties.png")));
 	lPropertiesButton.setIcon(icon);
@@ -312,10 +290,10 @@ public class Window extends JFrame implements ActionListener {
 
 	JButton ctlButton = new JButton();
 	JButton ctrButton = new JButton();
-	ctlButton.setActionCommand("ctr");
-	ctrButton.setActionCommand("ctl");
-	ctlButton.addActionListener(control);
-	ctrButton.addActionListener(control);
+	ctlButton.setActionCommand("copyto");
+	ctrButton.setActionCommand("copyto");
+	ctlButton.addActionListener(lControl);
+	ctrButton.addActionListener(rControl);
 	icon = new ImageIcon(Toolkit.getDefaultToolkit().getImage(
 		getClass().getResource("/src/copy_to_right.png")));
 	ctlButton.setIcon(icon);

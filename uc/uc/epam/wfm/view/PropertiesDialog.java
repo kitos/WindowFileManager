@@ -11,9 +11,7 @@ import javax.swing.JLabel;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.filechooser.FileSystemView;
-
 import uc.epam.wfm.model.Model;
-import uc.epam.wfm.model.TableModel;
 
 public class PropertiesDialog extends JDialog {
 
@@ -37,8 +35,7 @@ public class PropertiesDialog extends JDialog {
 	JLabel pathLabel = new JLabel("Path:");
 	JLabel filePath = new JLabel(file.getAbsolutePath());
 	JLabel sizeLabel = new JLabel("Size:");
-	JLabel fileSize = new JLabel(TableModel.sizeConverter(Model
-		.itemLength(file)));
+	JLabel fileSize = new JLabel(View.sizeConverter(Model.itemLength(file)));
 	JLabel containsLabel = new JLabel("Contains:");
 	int filesCount = 0;
 	int folderCount = 0;

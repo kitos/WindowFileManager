@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.util.Vector;
 import javax.swing.JComboBox;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import uc.epam.wfm.model.Model;
@@ -22,88 +21,71 @@ import uc.epam.wfm.view.Window;
 public class Controller implements ActionListener {
 
     private Window window;
-    private Vector<String> paths;
 
-    public Controller(Window window) {
+    private Vector<String> paths;
+    private JComboBox<String> pathComboBox;
+    private JTable ownTable;
+    private TableModel ownTM;
+    private TableModel targetTM;
+
+    public void initComponents(Window window, JComboBox<String> pathComboBox,
+	    JTable table, TableModel ownTableModel,
+	    TableModel targetTableModel, Vector<String> paths) {
 	this.window = window;
-	this.paths = window.getPaths();
+	this.pathComboBox = pathComboBox;
+	this.ownTable = table;
+	this.ownTM = ownTableModel;
+	this.targetTM = targetTableModel;
+	this.paths = paths;
     }
 
     @Override
     public void actionPerformed(ActionEvent event) {
 	switch (event.getActionCommand()) {
-	case "ult":
-	    setPath(window.getLeftComboBox(), window.getLeftTableModel());
+	case "upt": // update table
+	    setPath();
 	    break;
-	case "urt":
-	    setPath(window.getRightComboBox(), window.getRightTableModel());
+	case "back": // go to parent directory
+	    goParentDirectiory();
 	    break;
-	case "lb":
-	    goParentDirectiory(window.getLeftComboBox(),
-		    window.getLeftTableModel());
+	case "del":
+	    deleteItem();
 	    break;
-	case "rb":
-	    goParentDirectiory(window.getRightComboBox(),
-		    window.getRightTableModel());
+	case "newfile":
+	    createFile();
 	    break;
-	case "ldel":
-	    deleteFile(window.getLeftTable(), window.getLeftTableModel());
+	case "newfolder":
+	    createFolder();
 	    break;
-	case "rdel":
-	    deleteFile(window.getRightTable(), window.getRightTableModel());
+	case "copyto":
+	    copyOrMoveItemTo();
 	    break;
-	case "lnfile":
-	    createFile(window.getLeftTableModel());
+	case "rename":
+	    renameItem();
 	    break;
-	case "rnfile":
-	    createFile(window.getRightTableModel());
-	    break;
-	case "lnfolder":
-	    createFolder(window.getLeftTableModel());
-	    break;
-	case "rnfolder":
-	    createFolder(window.getRightTableModel());
-	    break;
-	case "ctr":
-	    copyOrMoveItemTo(window.getLeftTable(), window.getLeftTableModel(),
-		    window.getRightTableModel());
-	    break;
-	case "ctl":
-	    copyOrMoveItemTo(window.getRightTable(),
-		    window.getRightTableModel(), window.getLeftTableModel());
-	    break;
-	case "lren":
-	    renameItem(window.getLeftTable(), window.getLeftTableModel());
-	    break;
-	case "rren":
-	    renameItem(window.getRightTable(), window.getRightTableModel());
-	    break;
-	case "lprop":
-	    properties(window.getLeftTable(), window.getLeftTableModel());
-	    break;
-	case "rprop":
-	    properties(window.getRightTable(), window.getRightTableModel());
+	case "prop": // properties dialog
+	    properties();
 	    break;
 	}
     }
 
-    private void setPath(JComboBox<String> cb, TableModel tm) {
-	if (tm.setDirectory(cb.getSelectedItem().toString())) {
-	    cb.setSelectedItem(tm.getAbsPath());
-	    if (!paths.contains(tm.getAbsPath())) {
-		paths.add(tm.getAbsPath());
+    private void setPath() {
+	if (ownTM.setDirectory(pathComboBox.getSelectedItem().toString())) {
+	    pathComboBox.setSelectedItem(ownTM.getAbsPath());
+	    if (!paths.contains(ownTM.getAbsPath())) {
+		paths.add(ownTM.getAbsPath());
 	    }
 	} else {
 	    View.showWrongPathError(window);
-	    cb.setSelectedItem(tm.getAbsPath());
+	    pathComboBox.setSelectedItem(ownTM.getAbsPath());
 	}
     }
 
-    private void goParentDirectiory(JComboBox<String> cb, TableModel tm) {
-	tm.setParentDirectory();
-	cb.setSelectedItem(tm.getAbsPath());
-	if (!paths.contains(tm.getAbsPath())) {
-	    paths.add(tm.getAbsPath());
+    private void goParentDirectiory() {
+	ownTM.setParentDirectory();
+	pathComboBox.setSelectedItem(ownTM.getAbsPath());
+	if (!paths.contains(ownTM.getAbsPath())) {
+	    paths.add(ownTM.getAbsPath());
 	}
 
     }
@@ -111,105 +93,90 @@ public class Controller implements ActionListener {
     public void tableCellClicked(MouseEvent event) {
 	if ((event.getButton() == MouseEvent.BUTTON1)
 		&& (event.getClickCount() > 1)) {
-	    JTable table = (JTable) event.getSource();
 	    Point p = event.getPoint();
-	    TableModel tm = (TableModel) table.getModel();
-	    File file = new File(tm.getAbsPath() + File.separator
-		    + table.getValueAt(table.rowAtPoint(p), 1));
+	    File file = new File(ownTM.getAbsPath() + File.separator
+		    + ownTable.getValueAt(ownTable.rowAtPoint(p), 1));
 	    if (file.isDirectory()) {
-		tm.setDirectory(file.getAbsolutePath());
-		table.repaint();
-		if (tm.equals(window.getLeftTableModel())) {
-		    window.getLeftComboBox().setSelectedItem(
-			    file.getAbsolutePath());
-		} else {
-		    window.getRightComboBox().setSelectedItem(
-			    file.getAbsolutePath());
-		}
+		ownTM.setDirectory(file.getAbsolutePath());
+		ownTable.repaint();
+		pathComboBox.setSelectedItem(file.getAbsolutePath());
 	    } else {
 		try {
 		    Desktop.getDesktop().open(file);
-		} catch (IOException e1) {
-		    JOptionPane.showMessageDialog(null,
-			    "I don't know why, but a can't open this file.",
-			    "Error", JOptionPane.ERROR_MESSAGE);
+		} catch (IOException e) {
+		    View.showOpenFileError(e.getMessage());
 		}
 	    }
 	} else if (event.getButton() == MouseEvent.BUTTON3) {
-	    JTable table = (JTable) event.getSource();
 	    Point p = event.getPoint();
-	    table.getSelectionModel().setSelectionInterval(table.rowAtPoint(p),
-		    table.rowAtPoint(p));
+	    ownTable.getSelectionModel().setSelectionInterval(
+		    ownTable.rowAtPoint(p), ownTable.rowAtPoint(p));
 
 	    JPopupMenu popup = new JPopupMenu();
 	    JMenuItem propMenu = new JMenuItem("Properties");
 	    propMenu.addActionListener(this);
-	    propMenu.setActionCommand(table.equals(window.getLeftTable()) ? "lprop"
-		    : "rprop");
+	    propMenu.setActionCommand("prop");
 	    popup.add(propMenu);
 
-	    popup.show(table, event.getX(), event.getY());
+	    popup.show(ownTable, event.getX(), event.getY());
 	}
     }
 
-    public void deleteFile(JTable sourceTable, TableModel sourceTM) {
-	while (sourceTable.getRowCount() != 0
-		&& sourceTable.getSelectedRowCount() != 0) {
-	    int selectedRow = sourceTable.getSelectedRow();
-	    String fileName = sourceTable.getValueAt(selectedRow, 1).toString();
-	    File file = new File(sourceTM.getAbsPath() + File.separator
-		    + fileName);
+    public void deleteItem() {
+	while (ownTable.getRowCount() != 0
+		&& ownTable.getSelectedRowCount() != 0) {
+	    int selectedRow = ownTable.getSelectedRow();
+	    String fileName = ownTable.getValueAt(selectedRow, 1).toString();
+	    File file = new File(ownTM.getAbsPath() + File.separator + fileName);
 	    if (View.showConfirmationDeletion(window, file)) {
 		if (!file.exists() || !Model.deleteItem(file)) {
 		    View.showDeletingError(window, file);
 		}
-		sourceTable.getSelectionModel().removeSelectionInterval(
-			selectedRow, selectedRow);
 	    }
+	    ownTable.getSelectionModel().removeSelectionInterval(selectedRow,
+		    selectedRow);
 	}
-	sourceTM.updateTable();
-	sourceTable.repaint();
+	ownTM.updateTable();
+	ownTable.repaint();
     }
 
-    public void createFile(TableModel tableModel) {
+    public void createFile() {
 	String fileName = View.showNewFileDialog(window);
 	if (fileName != null) {
-	    String filePath = tableModel.getAbsPath();
+	    String filePath = ownTM.getAbsPath();
 	    filePath += File.separator + fileName;
 	    try {
 		if (!Model.createFile(filePath)) {
 		    View.showNewFileError(window, fileName);
 		}
 	    } catch (IOException e) {
-		View.showIOError(window);
+		View.showIOError(window, e.getMessage());
 	    }
-	    tableModel.updateTable();
+	    ownTM.updateTable();
 
 	}
     }
 
-    public void createFolder(TableModel tableModel) {
+    public void createFolder() {
 	String folderName = View.showNewFolderDialog(window);
 	if (folderName != null) {
-	    String folderPath = tableModel.getAbsPath();
+	    String folderPath = ownTM.getAbsPath();
 	    folderPath += File.separator + folderName;
 	    if (!Model.createFolder(folderPath)) {
 		View.showCreationFolderError(window, folderName);
 	    } else {
-		tableModel.updateTable();
+		ownTM.updateTable();
 	    }
 	}
     }
 
-    public void copyOrMoveItemTo(JTable sourceTable, TableModel sourceTM,
-	    TableModel targetTM) {
-	while (sourceTable.getRowCount() != 0
-		&& sourceTable.getSelectedRowCount() != 0) {
+    public void copyOrMoveItemTo() {
+	while (ownTable.getRowCount() != 0
+		&& ownTable.getSelectedRowCount() != 0) {
 
-	    int selectedRow = sourceTable.getSelectedRow();
-	    String fileName = sourceTable.getValueAt(selectedRow, 1).toString();
-	    String fileAbsPath = sourceTM.getAbsPath() + File.separator
-		    + fileName;
+	    int selectedRow = ownTable.getSelectedRow();
+	    String fileName = ownTable.getValueAt(selectedRow, 1).toString();
+	    String fileAbsPath = ownTM.getAbsPath() + File.separator + fileName;
 	    String targetPath = targetTM.getAbsPath();
 
 	    if (!new File(targetPath + File.separator + fileName).exists()
@@ -221,43 +188,38 @@ public class Controller implements ActionListener {
 			Model.moveItemTo(fileAbsPath, targetPath);
 		    }
 		} catch (IOException e) {
-		    View.showIOError(window);
+		    View.showIOError(window, e.getMessage());
 		}
 		targetTM.updateTable();
 	    }
-	    sourceTable.getSelectionModel().removeSelectionInterval(
-		    selectedRow, selectedRow);
+	    ownTable.getSelectionModel().removeSelectionInterval(selectedRow,
+		    selectedRow);
 	}
-	sourceTM.updateTable();
-	sourceTable.repaint();
+	ownTM.updateTable();
+	ownTable.repaint();
     }
 
-    public void renameItem(JTable table, TableModel tableModel) {
-	if (table.getSelectedRow() != -1) {
-	    String fileName = table.getValueAt(table.getSelectedRow(), 1)
+    public void renameItem() {
+	if (ownTable.getSelectedRow() != -1) {
+	    String fileName = ownTable.getValueAt(ownTable.getSelectedRow(), 1)
 		    .toString();
-	    String filePath = tableModel.getAbsPath();
+	    String filePath = ownTM.getAbsPath();
 	    String newFileName = View.showRenameDialog(window, fileName);
 	    filePath += File.separator + fileName;
 	    Model.renameItem(filePath, newFileName);
-	    tableModel.updateTable();
+	    ownTM.updateTable();
 	}
     }
 
     /**
      * Run dialog, showing information about selected file in table or parent
-     * directory, if no one file selected
-     * 
-     * @param table
-     *            thats information we must show
-     * @param tableModel
-     *            of that table
+     * directory, if no one file selected of that table
      */
-    public void properties(JTable table, TableModel tableModel) {
-	String path = tableModel.getAbsPath();
-	if (table.getSelectedRow() != -1) {
+    public void properties() {
+	String path = ownTM.getAbsPath();
+	if (ownTable.getSelectedRow() != -1) {
 	    path += File.separator
-		    + table.getValueAt(table.getSelectedRow(), 1);
+		    + ownTable.getValueAt(ownTable.getSelectedRow(), 1);
 	}
 	new PropertiesDialog(new File(path));
     }
